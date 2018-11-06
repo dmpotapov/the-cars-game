@@ -14,7 +14,7 @@ class GameStorage {
     }
 
     setHighScore(newScore) {
-        return AsyncStorage.setItem("game:highScore", newScore);
+        return AsyncStorage.setItem("game:highScore", ""+newScore);
     }
 }
 

@@ -10,7 +10,7 @@ class SettingsWindow extends React.Component {
             roadsCount: 3
         }
         this.gameStorage = new GameStorage();
-        this.getSettings();
+        this.initSettings();
     }
 
     changeSpeed(val) {
@@ -21,7 +21,7 @@ class SettingsWindow extends React.Component {
         this.setState({ roadsCount: val });
     }
 
-    async getSettings() {
+    async initSettings() {
         try {
             let settings = await this.gameStorage.getSettings();
             if (settings != null) {

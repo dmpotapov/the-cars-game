@@ -2,6 +2,7 @@ import React from 'react';
 import { Alert, View, Text, Button } from 'react-native';
 import Car from './gameObjects/Car';
 import Obstacle from './gameObjects/Obstacle';
+import GameStorage from './GameStorage';
 
 const roadsCount = 3;
 const obstaclesGenerateStep = 500;
@@ -18,6 +19,7 @@ class GameWindow extends React.Component {
       currentRoad: 0, 
       roads: roads
     };
+    this.gameStorage = new GameStorage();
   }
 
   componentDidMount() {
@@ -76,9 +78,9 @@ class GameWindow extends React.Component {
   checkCollision() {
     let r = this.state.roads[this.state.currentRoad];
     r.obstacles.forEach(o => {
-      console.log(o.position+15, this.state.currentPosition);
       if (this.state.currentPosition === o.position+15) {
-        this.props.navigation.navigate('Home');
+        this.checkAndResetHighScore(this.state.currentPosition);
+        this.endGame();
       }
     })
   }
@@ -97,6 +99,22 @@ class GameWindow extends React.Component {
                   {obstacles}
                 </View>
     }).bind(this));
+  }
+
+  async checkAndResetHighScore(newScore) {
+    try {
+      let highScore = await this.gameStorage.getHighScore();
+      console.log("current", highScore, "new", newScore);
+      if (!highScore || newScore > highScore) {
+        await this.gameStorage.setHighScore(newScore);
+      }
+    }
+    catch(e) { }
+  }
+
+  endGame() {
+    Alert.alert("You lose");
+    this.props.navigation.navigate('Home');
   }
 
   render() {

@@ -1,15 +1,47 @@
 import React from 'react';
-import { StyleSheet, Text, View, Button, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import {
   createStackNavigator,
 } from 'react-navigation';
 import GameWindow from './GameWindow';
 import SettingsWindow from './SettingsWindow';
+import GameStorage from './GameStorage';
 
 class MainScreen extends React.Component {
+  constructor() {
+    super();
+    this.gameStorage = new GameStorage();
+    this.state = { highScore: 0 };
+  }
+
+  async initHighScore() {
+    try {
+      var highScore = await this.gameStorage.getHighScore();
+      if (highScore) {
+        this.setState({ highScore: parseInt(highScore) });
+      }
+    }
+    catch(e) { }
+  }
+
+  componentDidMount() {
+    this.initHighScore();
+    this.didBlurSubscription = this.props.navigation.addListener(
+      'didFocus',
+      payload => {
+        this.initHighScore();
+      }
+    );
+  }
+
+  componentWillUnmount() {
+    this.didBlurSubscription.remove();
+  }
+
   render() {
     return (<View style={styles.container}>
     <Text style={styles.title}>Cars</Text>
+    <Text style={styles.highScore}>Current high score: {this.state.highScore}</Text>
     <View style={styles.menuContainer}>
       <TouchableOpacity
         style={styles.menuButton}
@@ -51,6 +83,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
     alignItems: 'center',
     justifyContent: 'space-evenly',
+  },
+  highScore: {
+    flex: 1
   },
   title: {
     fontSize: 30,
