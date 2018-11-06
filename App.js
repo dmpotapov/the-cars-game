@@ -1,23 +1,30 @@
 import React from 'react';
-import { StyleSheet, Text, View, Button, Alert } from 'react-native';
+import { StyleSheet, Text, View, Button, TouchableOpacity } from 'react-native';
 import {
   createStackNavigator,
 } from 'react-navigation';
 import GameWindow from './GameWindow';
+import SettingsWindow from './SettingsWindow';
 
 class MainScreen extends React.Component {
   render() {
-
     return (<View style={styles.container}>
     <Text style={styles.title}>Cars</Text>
     <View style={styles.menuContainer}>
-    <Button
-      style={styles.menuButton}
-      onPress={() => {
-        this.props.navigation.navigate('Game');
-      }}
-      title="New game"
-    />
+      <TouchableOpacity
+        style={styles.menuButton}
+        onPress={() => {
+          this.props.navigation.navigate('Game');
+        }}>
+        <Text style={styles.menuButtonText}>New Game</Text>  
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.menuButton}
+        onPress={() => {
+          this.props.navigation.navigate('Settings');
+        }}>
+        <Text style={styles.menuButtonText}>Settings</Text>  
+      </TouchableOpacity>
     </View>
   </View>);
   }
@@ -25,7 +32,8 @@ class MainScreen extends React.Component {
 
 const RootStack = createStackNavigator({
   Home: MainScreen,
-  Game: GameWindow
+  Game: GameWindow,
+  Settings: SettingsWindow
 },
 {
   initialRouteName: 'Home',
@@ -54,7 +62,13 @@ const styles = StyleSheet.create({
     flex: 2
   },
   menuButton: {
+    backgroundColor: '#999',
     padding: 10,
-    borderRadius: 10
+    borderRadius: 10,
+    marginBottom: 50
+  },
+  menuButtonText: {
+    fontSize: 16,
+    textAlign: 'center'
   }
 });

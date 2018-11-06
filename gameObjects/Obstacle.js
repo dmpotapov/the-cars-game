@@ -21,7 +21,8 @@ class Obstacle extends React.Component {
             width: 30,
             position: 'absolute',
             backgroundColor: '#000',
-            top: this.props.pos * 30
+            top: this.props.pos * 30,
+            left: 25
         }
     }
 
