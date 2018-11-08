@@ -83,9 +83,9 @@ class SettingsWindow extends React.Component {
 
 const styles = StyleSheet.create({
     container: {
-      flex: 1,
-      flexDirection: 'column',
-      backgroundColor: '#ccc'
+        flex: 1,
+        flexDirection: 'column',
+        backgroundColor: '#ccc'
     },
     header: {
         fontSize: 24,

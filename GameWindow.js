@@ -3,26 +3,53 @@ import { Alert, View, Text, Button } from 'react-native';
 import Car from './gameObjects/Car';
 import Obstacle from './gameObjects/Obstacle';
 import GameStorage from './GameStorage';
-
-const roadsCount = 3;
-const obstaclesGenerateStep = 500;
+import { CollisionChecker } from './CollisionChecker';
 
 class GameWindow extends React.Component {
   constructor() {
-    super(); 
-    let roads = [];
-    for (let i = 0; i < roadsCount; i++) {
-      roads.push({ obstacles: [] });
-    }
+    super();
     this.state = { 
       currentPosition: 0, 
       currentRoad: 0, 
-      roads: roads
+      roads: []
     };
+    this.settings = {
+      roadsCount: 3,
+      speed: 20
+    }
     this.gameStorage = new GameStorage();
+    this.timeoutsClean = false;
   }
 
   componentDidMount() {
+    this.initGame();
+  }
+
+  async initGame() {
+    try {
+      let settings = await this.gameStorage.getSettings();
+      if (settings) {
+        this.settings = JSON.parse(settings);
+      }
+      this.initRoadsList();
+      this.startScoreCount();
+      this.startObstacleAddLoop();
+    }
+    catch(e) { }
+  }
+
+  initRoadsList() {
+    this.setState(prev => {
+      let roads = [];
+      for (let i = 0; i < this.settings.roadsCount; i++) {
+        roads.push({ obstacles: [] });
+      }
+      prev.roads = roads;
+      return prev;
+    });
+  }
+
+  startScoreCount() {
     this.positionChangeIntervalId = setInterval(() => { 
       this.setState(prev => {
         if (prev) {
@@ -32,12 +59,11 @@ class GameWindow extends React.Component {
         return { currentPosition: 0 };
       })
       this.checkCollision();
-    }, 200);
-    this.startObstacleAddLoop();
+    }, Math.round(5000 / this.settings.speed));
   }
 
   startObstacleAddLoop() {
-    this.addObstacle()
+    this.addObstacle();
   }
 
   addObstacle() {
@@ -49,12 +75,14 @@ class GameWindow extends React.Component {
       }
       return prev;
     });
-    this.obstacleTimeoutId = setTimeout(this.addObstacle.bind(this), Math.floor(Math.random() * (5000 - 1000)) + 1000);
+    this.obstacleTimeoutId = setTimeout(this.addObstacle.bind(this), 
+                                        Math.floor(Math.random() * ((15000 * this.settings.roadsCount) / this.settings.speed)) 
+                                                    + (10000 * this.settings.roadsCount) / this.settings.speed);
   }
 
   generateObstacle(initPos) {
     return {
-      road: Math.floor(Math.random() * roadsCount),
+      road: Math.floor(Math.random() * this.settings.roadsCount),
       position: initPos
     }
   }
@@ -67,7 +95,7 @@ class GameWindow extends React.Component {
           break;
 
         case 'right':
-          if (prev.currentRoad < roadsCount - 1) prev.currentRoad += 1;
+          if (prev.currentRoad < this.settings.roadsCount - 1) prev.currentRoad += 1;
           break;
       }
 
@@ -78,33 +106,17 @@ class GameWindow extends React.Component {
   checkCollision() {
     let r = this.state.roads[this.state.currentRoad];
     r.obstacles.forEach(o => {
-      if (this.state.currentPosition === o.position+15) {
+      if (this.collisionChecker.check(this.state.currentPosition, o.position)) {
+        this.clearTimeouts();
         this.checkAndResetHighScore(this.state.currentPosition);
         this.endGame();
       }
     })
   }
 
-  renderRoads() {
-    return this.state.roads.map(((r, i) => {
-      let obstacles = r.obstacles.map((o, j) => { 
-        return <Obstacle pos={this.state.currentPosition - o.position} key={j} />
-      });
-      return (this.state.currentRoad === i) 
-              ? <View style={styles.road} key={i}>
-                  {obstacles}
-                  <Car />
-                </View>
-              : <View style={styles.road} key={i}>
-                  {obstacles}
-                </View>
-    }).bind(this));
-  }
-
   async checkAndResetHighScore(newScore) {
     try {
       let highScore = await this.gameStorage.getHighScore();
-      console.log("current", highScore, "new", newScore);
       if (!highScore || newScore > highScore) {
         await this.gameStorage.setHighScore(newScore);
       }
@@ -117,12 +129,32 @@ class GameWindow extends React.Component {
     this.props.navigation.navigate('Home');
   }
 
+  measureField() {
+    this.field.measure((ox, oy, width, height, px, py) => this.collisionChecker = new CollisionChecker(height));
+  }
+
+  renderRoads() {
+    return this.state.roads.map(((r, i) => {
+      let obstacles = r.obstacles.map((o, j) => { 
+        return <Obstacle pos={this.state.currentPosition - o.position} key={j} />
+      });
+      return (this.state.currentRoad === i) 
+              ? <View style={styles.road} key={i}>
+                  {obstacles}
+                  <Car ref="car" />
+                </View>
+              : <View style={styles.road} key={i}>
+                  {obstacles}
+                </View>
+    }).bind(this));
+  }
+
   render() {
     let roads = this.renderRoads();
 
     return (
       <View style={styles.container}>
-        <View style={styles.gameField}>
+        <View style={styles.gameField} ref={(c) => { this.field = c; }} onLayout={(e) => this.measureField()}>
             {roads}
         </View>
         <View style={styles.gameParams}>
@@ -137,8 +169,15 @@ class GameWindow extends React.Component {
   }
 
   componentWillUnmount() {
-    clearInterval(this.positionChangeIntervalId);
-    clearTimeout(this.obstacleTimeoutId);
+    this.clearTimeouts();
+  }
+
+  clearTimeouts() {
+    if (!this.timeoutsClean) {
+      clearInterval(this.positionChangeIntervalId);
+      clearTimeout(this.obstacleTimeoutId);
+      this.timeoutsClean = true;
+    }
   }
 }
 
@@ -150,8 +189,8 @@ const styles = {
     flexDirection: 'row',
   },
   gameField: {
-    width: 241,
     flexDirection: 'row',
+    flex: 3,
     flexWrap: 'wrap',
     borderWidth: 1,
     borderRightWidth: 0,
@@ -172,11 +211,12 @@ const styles = {
     height: 50,
     width: 50
   },
-  road: {
-    position: 'relative',
-    width: 80,
+  road: { 
+    flex: 1,
     height: '100%',
     borderRightColor: "#666",
     borderRightWidth: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center'
   }
 }

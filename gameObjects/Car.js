@@ -1,6 +1,9 @@
 import React from 'react';
 import { View, Text,  } from 'react-native';
 
+export const carWidth = 30;
+export const carHeight = 40;
+
 class Car extends React.Component {
     constructor(props) {
         super(props);
@@ -31,13 +34,11 @@ class Car extends React.Component {
 
 const styles = {
     car: {
-        position: 'absolute',
-        bottom: 10,
-        left: 20,
-        width: 30,
-        height: 40,
+        width: carWidth,
+        height: carHeight,
         flexDirection: 'row',
         flexWrap: 'wrap',
+        margin: 10
     },
     carBlock: {
         width: 10,
