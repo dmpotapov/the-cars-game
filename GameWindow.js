@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, View, Text, Button } from 'react-native';
+import { Alert, View, Text, TouchableOpacity } from 'react-native';
 import Car from './gameObjects/Car';
 import Obstacle from './gameObjects/Obstacle';
 import GameStorage from './GameStorage';
@@ -27,7 +27,7 @@ class GameWindow extends React.Component {
       this.settings = await this.gameStorage.getSettings();
       this.initRoadsList();
       this.startScoreCount();
-      this.initSpeedUp();
+      // this.initSpeedUp();
       this.startObstacleAddLoop();
     }
     catch(e) { 
@@ -80,7 +80,7 @@ class GameWindow extends React.Component {
     this.setState(prev => {
       let obstacle = this.generateObstacle(prev.currentPosition);
       prev.roads[obstacle.road].obstacles.push(obstacle);
-      if (prev.roads[obstacle.road].obstacles.length > 10) {
+      if (prev.roads[obstacle.road].obstacles.length > 5) {
         prev.roads[obstacle.road].obstacles.splice(0, 1);
       }
       return prev;
@@ -164,15 +164,19 @@ class GameWindow extends React.Component {
 
     return (
       <View style={styles.container}>
+        <View style={styles.gameParams}>
+          <Text style={styles.currentScore}>Current score: {this.state.currentPosition}</Text>
+        </View>
         <View style={styles.gameField} ref={(c) => { this.field = c; }} onLayout={(e) => this.measureField()}>
             {roads}
-        </View>
-        <View style={styles.gameParams}>
-          <Text>{this.state.currentPosition}</Text>
-          <View style={styles.buttonsContainer}>
-            <Button style={styles.dirButton} title="&lt;" onPress={(e) => this.onCarPositionChange('left')} />
-            <Button style={styles.dirButton} title="&gt;" onPress={(e) => this.onCarPositionChange('right')} />
-          </View>
+            <TouchableOpacity
+            style={styles.tapZoneLeft}
+            onPress={(e) => this.onCarPositionChange('left')}> 
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.tapZoneRight}
+            onPress={(e) => this.onCarPositionChange('right')}> 
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -197,20 +201,23 @@ export default GameWindow;
 const styles = {
   container: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: 'column',
   },
   gameField: {
     flexDirection: 'row',
-    flex: 3,
+    flex: 1,
     flexWrap: 'wrap',
     borderWidth: 1,
     borderRightWidth: 0,
     borderColor: '#000'
   },
   gameParams: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'space-evenly',
+    height: 20,
+    marginTop: 20
+  },
+  currentScore: {
+    fontSize: 14,
+    fontWeight: 'bold'
   },
   buttonsContainer: {
     width: 120,
@@ -229,5 +236,19 @@ const styles = {
     borderRightWidth: 1,
     justifyContent: 'flex-end',
     alignItems: 'center'
+  },
+  tapZoneLeft: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: '50%'
+  },
+  tapZoneRight: {
+    position: 'absolute',
+    top: 0,
+    left: '50%',
+    bottom: 0,
+    right: 0
   }
 }

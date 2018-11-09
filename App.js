@@ -66,6 +66,7 @@ const RootStack = createStackNavigator({
   Settings: SettingsWindow
 },
 {
+  headerMode: 'None',
   initialRouteName: 'Home',
 });
 
