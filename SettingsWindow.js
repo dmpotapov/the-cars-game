@@ -5,11 +5,11 @@ import GameStorage from './GameStorage';
 class SettingsWindow extends React.Component {
     constructor() {
         super();
-        this.state = {
-            speed: 10,
-            roadsCount: 3
-        }
         this.gameStorage = new GameStorage();
+        this.state = {};
+    }
+
+    componentDidMount() {
         this.initSettings();
     }
 
@@ -21,12 +21,13 @@ class SettingsWindow extends React.Component {
         this.setState({ roadsCount: val });
     }
 
+    changeObstaclesIntensity(val) {
+        this.setState({ obstaclesIntensity: val });
+    }
+
     async initSettings() {
         try {
-            let settings = await this.gameStorage.getSettings();
-            if (settings != null) {
-                this.setState(JSON.parse(settings));
-            } 
+            this.setState(await this.gameStorage.getSettings());
         }
         catch (e) {
             Alert.alert("Error while getting game settings. Try again later");
@@ -42,6 +43,11 @@ class SettingsWindow extends React.Component {
         catch (e) {
             Alert.alert("Error while trying to save settings. Try again later");
         }
+        this.props.navigation.navigate('Home');
+    }
+
+    async resetSettings() {
+        await this.gameStorage.resetAll();
         this.props.navigation.navigate('Home');
     }
 
@@ -74,7 +80,24 @@ class SettingsWindow extends React.Component {
             </View>
             <View style={styles.row}>
                 <View style={styles.leftCell}>
+                    <Text>Obstacles Intensity</Text>
+                </View>
+                <View style={styles.rightCell}>
+                    <Slider minimumValue={1} maximumValue={10} step={1} 
+                            value={this.state.obstaclesIntensity}
+                            onValueChange={(e) => this.changeObstaclesIntensity(e)}
+                            style={styles.slider}></Slider>
+                    <Text>{this.state.obstaclesIntensity}</Text>
+                </View>
+            </View>
+            <View style={styles.row}>
+                <View style={styles.leftCell}>
                     <Button onPress={(e) => this.saveSettings() } title="Save"></Button>
+                </View>
+            </View>
+            <View style={styles.row}>
+                <View style={styles.leftCell}>
+                    <Button onPress={(e) => this.resetSettings() } title="Reset settings and high score"></Button>
                 </View>
             </View>
         </View>);

@@ -13,10 +13,7 @@ class GameWindow extends React.Component {
       currentRoad: 0, 
       roads: []
     };
-    this.settings = {
-      roadsCount: 3,
-      speed: 20
-    }
+    this.settings = {};
     this.gameStorage = new GameStorage();
     this.timeoutsClean = false;
   }
@@ -27,15 +24,16 @@ class GameWindow extends React.Component {
 
   async initGame() {
     try {
-      let settings = await this.gameStorage.getSettings();
-      if (settings) {
-        this.settings = JSON.parse(settings);
-      }
+      this.settings = await this.gameStorage.getSettings();
       this.initRoadsList();
       this.startScoreCount();
+      this.initSpeedUp();
       this.startObstacleAddLoop();
     }
-    catch(e) { }
+    catch(e) { 
+      Alert.alert("Error while trying to start a game. Try again later");
+      this.props.navigation.navigate('Home');
+    }
   }
 
   initRoadsList() {
@@ -66,18 +64,30 @@ class GameWindow extends React.Component {
     this.addObstacle();
   }
 
+  initSpeedUp() {
+    this.speedUpIntervalId = setInterval(() => {
+      if (this.settings.speed <= 90) {
+        this.settings.speed += 10;
+      }
+      else {
+        this.settings.speed = 100;
+        clearInterval(this.speedUpIntervalId);
+      }
+    }, 20000);
+  }
+
   addObstacle() {
     this.setState(prev => {
       let obstacle = this.generateObstacle(prev.currentPosition);
       prev.roads[obstacle.road].obstacles.push(obstacle);
-      if (prev.roads[obstacle.road].obstacles.length > 2) {
+      if (prev.roads[obstacle.road].obstacles.length > 10) {
         prev.roads[obstacle.road].obstacles.splice(0, 1);
       }
       return prev;
     });
     this.obstacleTimeoutId = setTimeout(this.addObstacle.bind(this), 
-                                        Math.floor(Math.random() * ((15000 * this.settings.roadsCount) / this.settings.speed)) 
-                                                    + (10000 * this.settings.roadsCount) / this.settings.speed);
+                                        Math.floor(Math.random() * ((30000 * this.settings.roadsCount) / this.settings.speed / this.settings.obstaclesIntensity )) 
+                                                    + (20000 * this.settings.roadsCount) / this.settings.speed / this.settings.obstaclesIntensity );
   }
 
   generateObstacle(initPos) {
@@ -175,6 +185,7 @@ class GameWindow extends React.Component {
   clearTimeouts() {
     if (!this.timeoutsClean) {
       clearInterval(this.positionChangeIntervalId);
+      clearInterval(this.speedUpIntervalId);
       clearTimeout(this.obstacleTimeoutId);
       this.timeoutsClean = true;
     }

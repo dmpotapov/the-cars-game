@@ -8,6 +8,6 @@ export class CollisionChecker {
     }
     
     check(carPosition, obstaclePosition) {
-        return Math.abs(carPosition - (obstaclePosition + this.collisionPosition)) <= 1;
+        return Math.abs(carPosition - (obstaclePosition + this.collisionPosition - 5)) <= 1;
     }
 }

@@ -1,20 +1,40 @@
 import { AsyncStorage } from 'react-native';
 
+const defaultSettings = {
+    speed: 10,
+    roadsCount: 3,
+    obstaclesIntensity: 5
+}
+
 class GameStorage {
-    getSettings() {
-        return AsyncStorage.getItem("game:settings");
+    async getSettings() {
+        let settings = await AsyncStorage.getItem("game:settings");
+        if (settings) {
+            return JSON.parse(settings);
+        } else {
+            return defaultSettings;
+        }
     }
 
-    setSettings(val) {
-        return AsyncStorage.setItem("game:settings", JSON.stringify(val));
+    async setSettings(val) {
+        return await AsyncStorage.setItem("game:settings", JSON.stringify(val));
     }
 
-    getHighScore() {
-        return AsyncStorage.getItem("game:highScore");
+    async getHighScore() {
+        let highScore = await AsyncStorage.getItem("game:highScore");
+        if (highScore) {
+            return parseInt(highScore);
+        } else {
+            return 0;
+        } 
     }
 
-    setHighScore(newScore) {
-        return AsyncStorage.setItem("game:highScore", ""+newScore);
+    async setHighScore(newScore) {
+        return await AsyncStorage.setItem("game:highScore", ""+newScore);
+    }
+
+    async resetAll() {
+        return await AsyncStorage.clear();
     }
 }
 

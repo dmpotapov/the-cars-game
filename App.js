@@ -17,9 +17,7 @@ class MainScreen extends React.Component {
   async initHighScore() {
     try {
       var highScore = await this.gameStorage.getHighScore();
-      if (highScore) {
-        this.setState({ highScore: parseInt(highScore) });
-      }
+      this.setState({ highScore: highScore });
     }
     catch(e) { }
   }
